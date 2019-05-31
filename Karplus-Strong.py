@@ -5,6 +5,7 @@ import sounddevice as sd
 import msvcrt
 
 def karplusStrong(noiseBurst, combParameter, combDelay, allPassParameter, nData):
+    #an arary with evenly spaced variables with nData length.
     samplingIndicies = np.arange(nData)
     outputSignal = np.zeros(nData)
     lowpassFilterState = np.zeros(1)
@@ -21,17 +22,26 @@ def karplusStrong(noiseBurst, combParameter, combDelay, allPassParameter, nData)
         allpassFilterState[1] = outputSignal[n]
     return outputSignal, samplingIndicies
 
-sampleRate = 44100
-simulationTime = 1.5
+sampleRate = 44100 #Hertz
+simulationTime = 1.5 #Defines the length of the sound generated.
+
+#Takes the simpulation time and multiplies with the sample rate
+#Which ends up having the desired length for the array the sound values
+#are stored in.
 nData = np.int(simulationTime*sampleRate)
+
+#noiseBurst is used as the input signal for the Karplus Strong algorithm.
 noiseBurst = np.r_[np.random.randn(200),np.zeros(nData-200)]
-combParameter = 0.99 #aka filter coefficient
+
+#The filter coefficient for the comb filter.
+combParameter = 0.99
 
 while True:
     #x = input("What note should be played?: ")
     print('Input note to play: ')
     x = msvcrt.getch().lower().decode()
-    print(x)
+    #Following is a messy way of checking what the user input is
+    #and then sets the pitch based on the input
     if x == "c":
         pitch = 130.81
     elif x == "csharp":
@@ -56,12 +66,12 @@ while True:
         pitch = 233.08
     elif x == "b":
         pitch = 246.94
+    else:
+        pitch = 0
 
     pitchPeriod = sampleRate/pitch
-    combDelay = int(m.floor(pitchPeriod-0.5))
-    print(combDelay)
-    fractionalDelay = pitchPeriod-combDelay-0.5
-    print(fractionalDelay)
+    combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
+    fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
     allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
 
     outputSignal, samplingIndicies = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
