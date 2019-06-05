@@ -3,11 +3,13 @@ import math as m
 import random
 import sounddevice as sd
 import msvcrt
+import time as t
+import _thread
 
 #Defining the function karplusStrong
-def karplusStrong(noiseBurst, combParameter, combDelay, allPassParameter, nData):
+def karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, samplingIndiciesIn):
     #an arary with evenly spaced variables with nData length.
-    samplingIndicies = np.arange(nData)
+    samplingIndicies = samplingIndiciesIn
     #Setting up the output signal array with 'no' data.
     outputSignal = np.zeros(nData)
     lowpassFilterState = np.zeros(1)
@@ -24,14 +26,28 @@ def karplusStrong(noiseBurst, combParameter, combDelay, allPassParameter, nData)
         allpassFilterState[1] = outputSignal[n] #Saving the output of the allpass filter
     return outputSignal, samplingIndicies
 
+def playChord(pitch, sampleRate):
+    if pitch > 0:
+        if noteCount == 0:
+            pitchPeriod = sampleRate/pitch
+            combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
+            fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
+            allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
+            print(allpassParameter)
+            outputSignal, samplingIndiciesA = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, samplingIndiciesStart)
+            sd.play(outputSignal, sampleRate)
+            sd.wait()
+
 
 sampleRate = 32000 #Hertz
-simulationTime = 3 #Defines the length of the sound generated.
+simulationTime = 1.5 #Defines the length of the sound generated.
+
 
 #Takes the simpulation time and multiplies with the sample rate
 #Which ends up having the desired length for the array the sound values
 #are stored in.
 nData = np.int(simulationTime*sampleRate)
+samplingIndiciesStart = np.arange(nData)
 noteCount = 0
 #noiseBurst is used as the input signal for the Karplus Strong algorithm.
 noiseBurst = np.r_[np.random.randn(200),np.zeros(nData-200)]
@@ -50,6 +66,7 @@ while True:
     #and then sets the pitch based on the input
     if x == "a":    #C3
         pitch = 130.81
+        playChord(130.81, sampleRate)
     elif x == "w":  #C3Sharp
         pitch = 138.59
     elif x == "s":  #D3
@@ -72,34 +89,51 @@ while True:
         pitch = 233.08
     elif x == "j":  #B3
         pitch = 246.94
+    elif x == "q":
+        exit()
+    elif x == "v":
+        _thread.start_new_thread(playChord, (130.81, sampleRate))
+        t.sleep(0.5)
+        _thread.start_new_thread(playChord, (164.81, sampleRate))
+        t.sleep(0.5)
+        _thread.start_new_thread(playChord, (196, sampleRate))
     else:
         pitch = 0
-
+'''
     if pitch > 0:
         if noteCount == 0:
             pitchPeriod = sampleRate/pitch
             combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
             fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
             allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
-            outputSignalA, samplingIndiciesA = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
+            outputSignalA, samplingIndiciesA = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, samplingIndiciesStart)
+            outputSignalA = np.pad(outputSignalA, (0, 64000), 'constant')
             print('a')
             noteCount = noteCount + 1
+
         elif noteCount == 1:
             pitchPeriod = sampleRate/pitch
             combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
             fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
             allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
-            outputSignalB, samplingIndiciesB = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
+            samplingIndiciesB = np.pad(samplingIndiciesStart, (32000,32000), 'constant')
+            outputSignalB, samplingIndiciesB = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, samplingIndiciesB)
             print('b')
             noteCount = noteCount + 1
+
         elif noteCount == 2:
             pitchPeriod = sampleRate/pitch
             combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
             fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
             allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
-            outputSignalC, samplingIndiciesC = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
+            samplingIndiciesC = np.pad(samplingIndiciesStart, (64000,0), 'constant')
+            outputSignalC, samplingIndiciesC = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, samplingIndiciesC)
             print('c')
 
-            sd.play(outputSignalA + outputSignalB + outputSignalC, sampleRate)
-            sd.wait()
-            noteCount = 0
+            playChord(outputSignalA + outputSignalB + outputSignalC, sampleRate)
+'''
+            #_thread.start_new_thread(playChord, (outputSignalA, sampleRate))
+            #t.sleep(0.1)
+            #_thread.start_new_thread(playChord, (outputSignalB, sampleRate))
+            #t.sleep(0.1)
+            #_thread.start_new_thread(playChord, (outputSignalC, sampleRate))
