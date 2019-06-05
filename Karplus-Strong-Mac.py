@@ -7,7 +7,9 @@ def karplusStrong(noiseBurst, combParameter, combDelay, allPassParameter, nData)
     #an arary with evenly spaced variables with nData length.
     samplingIndicies = np.arange(nData)
     outputSignal = np.zeros(nData)
+    #Used to store the previous lowpass filter input
     lowpassFilterState = np.zeros(1)
+    #Used to store the previous allpass filter input and output.
     allpassFilterState = np.zeros(2)
     for n in samplingIndicies:
         if n < combDelay:
@@ -33,7 +35,7 @@ nData = np.int(simulationTime*sampleRate)
 noiseBurst = np.r_[np.random.randn(200),np.zeros(nData-200)]
 
 #The filter coefficient for the comb filter.
-combParameter = 0.99
+combParameter = 0.8
 
 print('Instructions: ')
 print('Play notes by pressing the following buttons: A, W, S, E, D, F, T, G, Y, H, U, J')
@@ -41,7 +43,7 @@ print('The keys correspond to the following chords: ')
 print('C3, C3#, D3, D3#, E3, F3, F3#, G3, G3#, A3, A3#, B3')
 
 while True:
-    x = input('Press a key: ')
+    x = raw_input('Press a key: ')
     #Following is a messy way of checking what the user input is
     #and then sets the pitch based on the input
     if x == "a":    #C3
@@ -71,12 +73,11 @@ while True:
     else:
         pitch = 0
 
-    pitchPeriod = sampleRate/pitch
-    combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
-    fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
-    allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
-
-    outputSignal, samplingIndicies = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
-
-    sd.play(outputSignal, sampleRate)
-    sd.wait()
+    if pitch > 0:
+        pitchPeriod = sampleRate/pitch
+        combDelay = int(m.floor(pitchPeriod-0.5)) #The delay in the comb filter
+        fractionalDelay = pitchPeriod-combDelay-0.5 #the fractional delay used to create the allpass parameter
+        allpassParameter = (1-fractionalDelay)/(1+fractionalDelay)
+        outputSignal, samplingIndicies = karplusStrong(noiseBurst, combParameter, combDelay, allpassParameter, nData)
+        sd.play(outputSignal, sampleRate)
+        sd.wait()
