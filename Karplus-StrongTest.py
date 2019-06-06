@@ -121,9 +121,9 @@ while stream.is_active:
         t.sleep(0.07)
         _thread.start_new_thread(addPluckAtTime, (440, 0, 0))
     elif x == "s":  #B Major B, D#, F#
-        _thread.start_new_thread(addPluckAtTime, (269.99, 0, 0))
-        t.sleep(0.07)
         _thread.start_new_thread(addPluckAtTime, (311.13, 0, 0))
+        t.sleep(0.07)
+        _thread.start_new_thread(addPluckAtTime, (369.99, 0, 0))
         t.sleep(0.07)
         _thread.start_new_thread(addPluckAtTime, (493.88, 0, 0))
     if x == "d":    #C major, C, E, G
@@ -135,7 +135,7 @@ while stream.is_active:
     elif x == "f":  #D Major, D, F#, A
         _thread.start_new_thread(addPluckAtTime, (293.66, 0, 0))
         t.sleep(0.07)
-        _thread.start_new_thread(addPluckAtTime, (349.23, 0, 0))
+        _thread.start_new_thread(addPluckAtTime, (369.99, 0, 0))
         t.sleep(0.07)
         _thread.start_new_thread(addPluckAtTime, (440, 0, 0))
     elif x == "g":  #E major, E, G#, B
